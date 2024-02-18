@@ -3,22 +3,21 @@ import java.net.*;
 
 class HandleResponse extends Thread {
     BufferedReader serverIn;
-    String line;
 
-    HandleResponse(BufferedReader serverIn, String line) {
+    HandleResponse(BufferedReader serverIn) {
         this.serverIn = serverIn;
-        this.line = line;
         this.start();
     }
 
     public void run() {
+        String line;
         try {
             while (!"exit".equalsIgnoreCase(line = serverIn.readLine())) {
                 System.out.println();
                 System.out.println(line);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 }
@@ -36,23 +35,35 @@ class Client {
         String serverResponse = serverIn.readLine();// greetings from server
         System.out.println(serverResponse);
 
-        System.out.println("wants to chat with ?");
-        serverOut.println(br.readLine());
-        serverResponse = serverIn.readLine();
-        System.out.println(serverResponse);
+        while (true) {
+            System.out.println("wants to chat with ?");
+            serverOut.println(br.readLine());
+            serverResponse = serverIn.readLine();
+            System.out.println(serverResponse);// establishing connection response will be printed
 
-        serverResponse = serverIn.readLine();
-        System.out.println(serverResponse); // user is available or not that response will be printed...
+            serverResponse = serverIn.readLine();
+            System.out.println(serverResponse); // user is available or not that response will be printed...
 
-        System.out.println("Write messages and if u want to quit type 'exit' ");
-        String line = "";
-        new HandleResponse(serverIn, line);// Response Thread
+            new HandleResponse(serverIn);// Response Thread
 
-        // sending Thread
-        while (!"exit".equalsIgnoreCase(line = br.readLine())) {
-            serverOut.println(line);
+            while (true) {
+                // Sending Thread
+                System.out.println("Write messages and if u want to quit type 'exit' ");
+                String line = br.readLine();
+                if (line.equalsIgnoreCase("exit")) {
+                    break;
+                } else {
+                    serverOut.println(line);
+                }
+            }
+            serverOut.println("exit");
+            System.out.println("Wants to chat with someone else?(y/n)");
+            String operation = br.readLine();
+            serverOut.println(operation);
+            if (operation.equalsIgnoreCase("n")) {
+                break;
+            }
         }
-        serverOut.println("exit");
         socket.close();
 
     }

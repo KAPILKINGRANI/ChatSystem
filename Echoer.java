@@ -8,7 +8,7 @@
         like a file or network. Enabling auto-flush (true in constructor) makes it
         automatically flush the buffer, ensuring data is promptly sent, especially
         after writing a newline....
-      
+
  */
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -54,25 +54,36 @@ public class Echoer extends Thread {
 
             registerUser(username, clientSocket); // adding this to our hashmap
 
-            String receiverUsername = clientIn.readLine();
-            clientOut.println("Hold On Establishing Connection Between " + username + "and" + receiverUsername);
+            while (true) {
+                String receiverUsername = clientIn.readLine();
+                clientOut.println("Hold On Establishing Connection Between " + username +
+                        "and" + receiverUsername);
+                // boolean result = findUser(receiverUsername); // finding the user in our db
+                if (findUser(receiverUsername)) {
+                    Socket receiverSocket = db.get(receiverUsername);
+                    PrintWriter receiverOut = new PrintWriter(receiverSocket.getOutputStream(), true);
 
-            boolean result = findUser(receiverUsername); // finding the user in our db
-
-            if (result == true) {
-                Socket receiverSocket = db.get(receiverUsername);
-                PrintWriter receiverOut = new PrintWriter(receiverSocket.getOutputStream(), true);
-
-                while (!"exit".equalsIgnoreCase(line = clientIn.readLine())) {
-                    receiverOut.println(username + ":-" + line);
+                    while (true) {
+                        String line = clientIn.readLine();
+                        if (line.equalsIgnoreCase("exit")) {
+                            clientOut.println("exit");// this is to break the response thread in client
+                            break;
+                        } else {
+                            receiverOut.println(username + ":-" + line);
+                        }
+                    }
                 }
-                System.out.println("Client Closed");
 
-                clientSocket.close();
+                String operationResponse = clientIn.readLine();
+                if (operationResponse.equalsIgnoreCase("n")) {
+                    break;
+                }
             }
+            System.out.println("Client Closed");
+            clientSocket.close();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
     }
